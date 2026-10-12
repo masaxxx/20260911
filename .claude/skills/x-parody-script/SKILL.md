@@ -8,6 +8,8 @@ argument-hint: "[トピック（省略時はXトレンドから自動選定）] 
 
 ゴールは**笑える台本**。安全はネタ選びと架空化で取り、架空の世界の中では遠慮しない。
 
+笑いの質を上げたいときは、このスキルを分業で回すワークフロー `.claude/workflows/x-parody-writers-room.js`（ネタ出し3班→選考→執筆→冷読パンチアップ→毒の仕上げ→Blind read→安全確認）を使う。
+
 参照（各 Step が指す章だけ読む）:
 - [references/trend-sourcing.md](references/trend-sourcing.md) — 収集、除外ゲート、検索レシピ、裏取り、候補リスト
 - [references/guardrails.md](references/guardrails.md) — RED／YELLOW／GREEN、実名、ディスクレーマー、チェックリスト

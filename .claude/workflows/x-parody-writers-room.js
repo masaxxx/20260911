@@ -7,7 +7,8 @@ export const meta = {
     { title: 'Premises', detail: '3つの切り口で裏の物語を並列ネタ出し → 選考' },
     { title: 'Write', detail: '選ばれた骨格で台本を書く（Step 6・8・9）' },
     { title: 'Punch-up', detail: '冷読パンチアップ → 公爵の毒を研ぐパス' },
-    { title: 'Safety', detail: 'guardrails §7-A の最終確認と修正' },
+    { title: 'Blind read', detail: '骨格を知らない読み手が実際に笑った行を印し、無風区間を直す' },
+    { title: 'Safety', detail: 'guardrails §7-A の最終確認と修正（削るだけにせず差し替える）' },
   ],
 }
 
@@ -67,6 +68,18 @@ const CHOICE = {
     why: { type: 'string' },
   },
   required: ['beat_sheet_md', 'rejected_top3', 'why'],
+}
+
+const BLIND = {
+  type: 'object',
+  properties: {
+    laughs: { type: 'array', items: { type: 'string' }, description: '実際に声が出た行（[m:ss] と台詞の要旨）' },
+    smiles: { type: 'array', items: { type: 'string' } },
+    dead_zones: { type: 'array', items: { type: 'string' }, description: '20秒以上笑いのない区間（[m:ss]〜[m:ss] と理由）' },
+    predictable: { type: 'array', items: { type: 'string' }, description: 'オチが先に読めた行' },
+    lost: { type: 'array', items: { type: 'string' }, description: '意味が取れなかった・置いていかれた行' },
+  },
+  required: ['laughs', 'smiles', 'dead_zones', 'predictable', 'lost'],
 }
 
 const SAFETY = {
@@ -148,11 +161,27 @@ const wicked = await agent(`${COMMON}
 公爵の台詞だけを見直す。高い語彙と卑近な現実の落差（M1）、架空の相手の不幸をうっとり味わう台詞（M17）、視聴者への慇懃無礼、悪役の脆さ。ダークネス ${DARK} に届いていない台詞、説明になっている台詞、言い回しが似通った台詞を書き直す（各3案から選ぶ）。ボタンとダークターンが台本で最強の2点になっているか確かめる。
 触らないもの: 事実行・境界テロップ・出典・ディスクレーマー・実名の置き場所。闇の向き先は架空のキャスト・抽象概念・公爵自身だけ。ファイルを直接編集し、変更ログを同じ欄に追記して、要約を返す。`, { label: 'punchup:wicked', phase: 'Punch-up' })
 
-// 5. Safety
+// 5. Blind read: a reader who never saw the beat sheet marks real laughs; a fixer rewrites dead zones
+phase('Blind read')
+const blind = await agent(`あなたは日本の一般視聴者で、深夜のブラックコメディが好きだが、笑いには厳しい。元ネタのニュースはほぼ知らない。
+${path} を開き、「## 脚本本文」の見出しから次の「## 」見出しの直前までだけを読む。それ以外の節（メタ情報・事実シート・裏の物語・セルフレビューなど）と★印は見ない・無視する。他のファイルも読まない。
+映像を想像しながら頭から通して読み、実際に声が出た行・にやりとした行・オチが先に読めた行・意味が取れなかった行・20秒以上笑いのない区間を正直に記録する。お世辞は要らない。`, { label: 'blind:read', phase: 'Blind read', schema: BLIND })
+
+const fixed = blind ? await agent(`${COMMON}
+担当: 無風区間の修正。対象: ${path}。comedy-craft.md §1・§3・§6 を読む。
+骨格を知らない読み手の反応:
+${JSON.stringify(blind, null, 1)}
+- dead_zones の各区間に、声が出る行を1本以上入れる（前後と違う笑いの仕組みで。各3案から選ぶ）。
+- predictable の行は、オチの語を読めない方向に替えるか消す。lost の行は、絵か1語で分かるように直す（説明台詞は足さない）。
+- laughs の行は触らない。
+触らないもの: 事実行・境界テロップ・出典・ディスクレーマー・実名の置き場所。闇の向き先は架空のキャスト・抽象概念・公爵自身だけ。
+ファイルを直接編集し、セルフレビュー欄に「### Blind read の反映」として、読み手の結果（声が出た行数・無風区間の数）と変更点を追記して、要約を返す。`, { label: 'blind:fix', phase: 'Blind read' }) : null
+
+// 6. Safety
 phase('Safety')
 const safety = await agent(`${COMMON}
 担当: 最終安全確認。${SK}/references/guardrails.md を読み、${path} と ${src.candidates_path} を確認する。
-- §7-A をすべて点検し、「いいえ」は最小限の修正で直す（笑いは削らず、表現を架空寄りにずらす）。
+- §7-A をすべて点検し、「いいえ」は最小限の修正で直す。直すときは角を丸めた行を残さず、同じ位置に安全な標的（架空・公爵自身・抽象）を狙う別のボケを書き直す（comedy-craft.md §6「削っただけの安全修正」）。
 - パンチアップで事実行・出典・ディスクレーマー・実名の置き場所が変わっていないか確かめる。
 - 実在の人物・企業の言葉として『』で引いた語が、出典で一字一句確認できるか確かめる。
 - ${OUT}/ の全ファイルを grep し、RED の人名・キーワードが無いことを確かめる。
@@ -171,5 +200,7 @@ return {
   chosen_why: chosen && chosen.why,
   punchup: punch,
   wicked,
+  blind_read: blind && { laughs: blind.laughs.length, smiles: blind.smiles.length, dead_zones: blind.dead_zones },
+  blind_fix: fixed,
   safety,
 }
