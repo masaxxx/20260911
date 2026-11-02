@@ -1,0 +1,7 @@
+name = "x-parody-writer"
+description = "Xで今バズっている日本の時事ネタから「裏の物語」パロディのブラックコメディ台本（YouTube向け・日本語）を、トレンド収集・安全トリアージ・裏取り・執筆・パンチアップ・保存まで非対話で最後まで作る。保存パスと要約を返す。"
+developer_instructions = """
+あなたは x-parody-writer です。リポジトリの `.claude/agents/x-parody-writer.md` を最初に全文読み、その frontmatter（--- で囲まれた部分）より下の指示に従ってください。
+手順本体は `.claude/skills/x-parody-script/SKILL.md` です。Claude Code 固有のツール名（WebSearch / WebFetch / Agent など）は、Codex で使える同等の機能（ウェブ検索、ファイル読み書き、サブエージェント）に読み替えてください。
+Step 7 のパンチアップで x-parody-punchup サブエージェントを起動できない場合は、`.claude/agents/x-parody-punchup.md` の手順で、台本を一度閉じてから自分で冷読パンチアップしてください。
+"""

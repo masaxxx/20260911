@@ -1,0 +1,15 @@
+{
+  "name": "x-parody",
+  "version": "0.1.0",
+  "description": "Xの時事ネタから「裏の物語」を妄想したブラックコメディ台本（YouTube向け・日本語）を書くスキル。安全トリアージとディスクレーマー付き。",
+  "keywords": ["parody", "comedy", "script", "japanese", "youtube"],
+  "skills": "./.claude/skills/",
+  "interface": {
+    "displayName": "X Parody Script",
+    "shortDescription": "Xの時事ネタで「裏の物語」パロディ台本を書く",
+    "developerName": "masaxxx",
+    "category": "Productivity",
+    "capabilities": ["Write"],
+    "defaultPrompt": ["今日のXトレンドで裏の物語の台本を書いて"]
+  }
+}
